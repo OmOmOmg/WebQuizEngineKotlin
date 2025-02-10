@@ -1,0 +1,5 @@
+# Project exclude paths
+/.gradle/
+/Web Quiz Engine (Kotlin)/task/build/
+/Web Quiz Engine (Kotlin)/task/out/
+/Web Quiz Engine (Kotlin)/task/out/production/classes/
