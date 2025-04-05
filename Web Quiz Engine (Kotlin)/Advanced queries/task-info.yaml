@@ -12,6 +12,24 @@ files:
   - name: test/WebQuizEngineTest.java
     visible: false
     learner_created: false
+  - name: src/engine/QuizController.kt
+    visible: true
+    learner_created: true
+  - name: src/engine/AppUserDetailsImpl.kt
+    visible: true
+    learner_created: true
+  - name: src/engine/Repository.kt
+    visible: true
+    learner_created: true
+  - name: src/engine/Entities.kt
+    visible: true
+    learner_created: true
+  - name: src/engine/SecurityConfig.kt
+    visible: true
+    learner_created: true
+  - name: src/engine/AppUserAdapter.kt
+    visible: true
+    learner_created: true
 feedback_link: https://hyperskill.org/learn/step/24910#comment
 status: Unchecked
 record: -1
