@@ -59,7 +59,7 @@ data class AppUser(
     @field:Size(min = 5)
     var password: String? = null,
     @ElementCollection(fetch = FetchType.EAGER)
-    val quizzesSolved: MutableMap<Int, Instant>
+    val quizzesSolved: MutableMap<Instant, Int> = mutableMapOf()
 )
 
 data class CompletedQuiz(

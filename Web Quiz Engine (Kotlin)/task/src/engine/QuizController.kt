@@ -21,8 +21,8 @@ class QuizController(
     private val AppUserRepository: AppUserRepository,
     private val passwordEncoder: PasswordEncoder,
 //    private val completedQuizRepository: CompletedQuizRepository
-    )
-    {
+)
+{
     @PostMapping("/api/quizzes")
     fun postNewQuiz (
         @RequestBody @Valid newQuiz: CreateQuiz,
@@ -57,7 +57,7 @@ class QuizController(
 
     @GetMapping("/api/quizzes")
     fun getAllQuizzes(@RequestParam page: Int ): Page<PublicQuiz> {
-        val pageable: Pageable = PageRequest.of(page, 3)
+        val pageable: Pageable = PageRequest.of(page, 10)
         return repository.findAll(pageable).map {
             PublicQuiz(
                 id = it.id,
@@ -74,7 +74,7 @@ class QuizController(
         }
         val user = AppUserRepository.findAppUserByEmail(SecurityContextHolder.getContext().authentication.name)
         if (quiz.answer?.toList() == answer.answer || quiz.answer?.toList() == null && answer.answer!!.isEmpty()) {
-            user?.quizzesSolved?.put(id, Instant.now())
+            user?.quizzesSolved?.put(Instant.now(), id)
             AppUserRepository.save(user!!)
             return QuizResponse(success = true, feedback = "Congratulations, you're right!")
 
@@ -111,15 +111,19 @@ class QuizController(
     @GetMapping("/api/quizzes/completed")
     fun getCompletedQuizzes(@RequestParam page: Int): Page<CompletedQuiz> {
         val user = AppUserRepository.findAppUserByEmail(SecurityContextHolder.getContext().authentication.name)
-        val pageable: Pageable = PageRequest.of(page, 5)
-        val completedQuizzes = user?.quizzesSolved?.map {
+        val pageable: Pageable = PageRequest.of(page, 10)
+        val completedQuizzes = user?.quizzesSolved?.toSortedMap(compareByDescending { it })
+            ?.map {
             CompletedQuiz(
-                id = it.key,
-                completedAt = it.value
+                id = it.value,
+                completedAt = it.key
             )
         }
+        val start = pageable.offset.toInt().coerceAtMost(completedQuizzes!!.size)
+        val end = (start + pageable.pageSize).coerceAtMost(completedQuizzes!!.size)
+
         return if (completedQuizzes != null) {
-            PageImpl(completedQuizzes, pageable, completedQuizzes.size.toLong())
+            PageImpl(completedQuizzes.subList(start, end), pageable, completedQuizzes.size.toLong())
         } else {
             PageImpl(listOf(), pageable, 0)
         }

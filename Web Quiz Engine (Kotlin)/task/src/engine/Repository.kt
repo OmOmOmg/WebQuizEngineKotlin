@@ -12,5 +12,3 @@ interface QuizRepository: CrudRepository<NewQuiz, Int>, PagingAndSortingReposito
 interface AppUserRepository : CrudRepository<AppUser, String>, PagingAndSortingRepository<AppUser, String> {
     fun findAppUserByEmail(email: String?): AppUser?
 }
-
-//interface CompletedQuizRepository : CrudRepository<CompletedQuiz, Instant>, PagingAndSortingRepository<CompletedQuiz, Instant>
