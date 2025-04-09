@@ -7,6 +7,7 @@ import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Size
 import org.hibernate.annotations.Fetch
 import org.hibernate.annotations.FetchMode
+import java.time.Instant
 
 
 data class CreateQuiz(
@@ -56,8 +57,12 @@ data class AppUser(
     @field:Email(regexp = "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$")
     val email: String? = null,
     @field:Size(min = 5)
-    var password: String? = null
-//    var authority: String? = null
+    var password: String? = null,
+    @ElementCollection(fetch = FetchType.EAGER)
+    val quizzesSolved: MutableMap<Int, Instant>
 )
 
-//data class RegistrationDetails(val email: String, val password: String)
+data class CompletedQuiz(
+    val id: Int,
+    val completedAt: Instant
+)

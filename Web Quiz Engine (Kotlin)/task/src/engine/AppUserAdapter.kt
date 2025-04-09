@@ -3,6 +3,7 @@ package engine
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
+import java.time.Instant
 
 class AppUserAdapter(private val user: AppUser) : UserDetails {
     override fun getAuthorities(): Collection<GrantedAuthority> = listOf(SimpleGrantedAuthority("ROLE_USER"))
@@ -12,17 +13,9 @@ class AppUserAdapter(private val user: AppUser) : UserDetails {
         require(password.length >= 5)
         return password
     }
-//    fun getEmail(): String {
-//        val email = requireNotNull(user.email)
-//        require(email.matches(Regex("^[A-Za-z0-9+_.-]+@(.+)\\.(.+)$")))
-//        return email
-//    }
+
     override fun getUsername(): String = requireNotNull(user.email)
-//    override fun getUsername(): String {
-//        val email = requireNotNull(user.email)
-//        require(email.matches(Regex("^[A-Za-z0-9+_.-]+@(.+)\\.(.+)$")))
-//        return email
-//    }
+
 
     override fun isAccountNonExpired(): Boolean = true
 
@@ -32,5 +25,5 @@ class AppUserAdapter(private val user: AppUser) : UserDetails {
 
     override fun isEnabled(): Boolean = true
 
-
+//    fun quizzesCompleted(quizId: Int, time: Instant): Map<Int, Instant> = mapOf(quizId to time)
 }

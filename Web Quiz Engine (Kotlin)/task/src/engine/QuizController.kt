@@ -2,18 +2,27 @@ package engine
 
 import com.sun.tools.javac.jvm.ByteCodes.ret
 import jakarta.validation.Valid
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Pageable
+import org.springframework.data.jpa.domain.AbstractPersistable_.id
 import org.springframework.http.HttpStatus
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.server.ResponseStatusException
+import java.time.Instant
 
 @RestController
 class QuizController(
     private val repository: QuizRepository,
     private val AppUserRepository: AppUserRepository,
-    private val passwordEncoder: PasswordEncoder) {
+    private val passwordEncoder: PasswordEncoder,
+//    private val completedQuizRepository: CompletedQuizRepository
+    )
+    {
     @PostMapping("/api/quizzes")
     fun postNewQuiz (
         @RequestBody @Valid newQuiz: CreateQuiz,
@@ -47,8 +56,9 @@ class QuizController(
     }
 
     @GetMapping("/api/quizzes")
-    fun getAllQuizzes(): List<PublicQuiz> {
-        return repository.findAll().map {
+    fun getAllQuizzes(@RequestParam page: Int ): Page<PublicQuiz> {
+        val pageable: Pageable = PageRequest.of(page, 3)
+        return repository.findAll(pageable).map {
             PublicQuiz(
                 id = it.id,
                 title = it.title,
@@ -60,11 +70,16 @@ class QuizController(
 
     @PostMapping("/api/quizzes/{id}/solve")
     fun solveQuiz(@PathVariable id: Int, @RequestBody answer: Answer): QuizResponse {
-        val quiz = repository.findById(id).orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND) }
-        return if (quiz.answer?.toList() == answer.answer || quiz.answer?.toList() == null && answer.answer!!.isEmpty()) {
-            QuizResponse(success = true, feedback = "Congratulations, you're right!")
+        val quiz = repository.findById(id).orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND)
+        }
+        val user = AppUserRepository.findAppUserByEmail(SecurityContextHolder.getContext().authentication.name)
+        if (quiz.answer?.toList() == answer.answer || quiz.answer?.toList() == null && answer.answer!!.isEmpty()) {
+            user?.quizzesSolved?.put(id, Instant.now())
+            AppUserRepository.save(user!!)
+            return QuizResponse(success = true, feedback = "Congratulations, you're right!")
+
         } else {
-            QuizResponse(success = false, feedback = "Wrong answer! Please, try again. id = $id. quizAnswer = ${quiz.answer} Answer = ${answer.answer}")
+            return QuizResponse(success = false, feedback = "Wrong answer! Please, try again. id = $id. quizAnswer = ${quiz.answer} Answer = ${answer.answer}")
         }
 
     }
@@ -91,6 +106,23 @@ class QuizController(
             throw ResponseStatusException(HttpStatus.FORBIDDEN)
         }
         repository.deleteById(id)
+    }
+
+    @GetMapping("/api/quizzes/completed")
+    fun getCompletedQuizzes(@RequestParam page: Int): Page<CompletedQuiz> {
+        val user = AppUserRepository.findAppUserByEmail(SecurityContextHolder.getContext().authentication.name)
+        val pageable: Pageable = PageRequest.of(page, 5)
+        val completedQuizzes = user?.quizzesSolved?.map {
+            CompletedQuiz(
+                id = it.key,
+                completedAt = it.value
+            )
+        }
+        return if (completedQuizzes != null) {
+            PageImpl(completedQuizzes, pageable, completedQuizzes.size.toLong())
+        } else {
+            PageImpl(listOf(), pageable, 0)
+        }
 
     }
 
